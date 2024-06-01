@@ -1,0 +1,10 @@
+
+.CodeMirror {
+    max-height: 100%;
+    border-radius: 10px;
+    min-height: 550px;
+    font-size: 13px;
+    line-height: 1.6;
+    padding-top: 20px;
+    
+}
