@@ -93,3 +93,65 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
 
+// import express from 'express';
+// const app = express();
+// import http from 'http'
+// import {Server} from 'socket.io'
+
+
+// const server = http.createServer(app);
+// const io = new Server(server)
+
+// const joinedUsers = new Set();
+
+// io.on('connection', (socket) => {
+//   socket.on('join', ({ roomId, username }) => {
+//     if (!joinedUsers.has(socket.id)) {
+//       joinedUsers.add(socket.id);
+//       socket.join(roomId);
+//       socket.data.username = username;
+      
+
+//       console.log(`${username} joined room ${roomId}`); 
+
+//       const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => ({
+//         socketId,
+//         username: io.sockets.sockets.get(socketId).data.username,
+//       }));
+      
+
+//       console.log('Existing clients in room:', clients); 
+
+//       socket.to(roomId).emit('join', { clients, username, socketId: socket.id })
+//       } else {
+//         console.log(`Socket ${socket.id} (user: ${username}) already joined room ${roomId}`); 
+//       }
+//     });
+
+
+//     socket.on('code-change', ({roomId, code}) => {
+//         socket.in(roomId).emit('code-change', { code })
+//     })
+
+//     socket.on('sync-code', ({socketId, code}) => {
+//         io.to(socketId).emit('code-change', { code })
+//     })
+
+//     socket.on('language:change', ({ roomId, language }) => {
+//       socket.in(roomId).emit('language:change', { language });
+//     });
+
+//     socket.on('output-details', ({ roomId, outputDetails }) => {
+//         socket.in(roomId).emit('output-details', { outputDetails });
+//     });
+
+//     socket.on('disconnect', () => {
+//       console.log('Socket disconnected:', socket.id);
+//       joinedUsers.delete(socket.id);
+//     });
+//   });
+
+  
+
+// const PORT = process.env.PORT || 3000;
+// server.listen(PORT, () => console.log(`Listening on port ${PORT}`)) 

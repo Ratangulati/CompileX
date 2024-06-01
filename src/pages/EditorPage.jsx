@@ -7,10 +7,10 @@ import toast from 'react-hot-toast';
 import axios from 'axios'
 import OutputWindow from '../components/OutputWindow';
 import { languageOptions } from '../constants/languageOptions';
-import { CopyButton } from '../components/ui/CopyButton';
-import { RunButton } from '../components/ui/RunButton';
-import { LeaveButton } from '../components/ui/LeaveButton';
-import DownloadButton from '../components/ui/DownloadButton';
+import { CopyButton } from '../components/Buttons/CopyButton';
+import { RunButton } from '../components/Buttons/RunButton';
+import { LeaveButton } from '../components/Buttons/LeaveButton';
+import DownloadButton from '../components/Buttons/DownloadButton';
 
 
 
@@ -265,5 +265,4 @@ console.log(a)
 }
 
 export default EditorPage    
-
 

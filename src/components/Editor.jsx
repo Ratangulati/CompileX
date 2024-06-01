@@ -73,7 +73,7 @@ const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, l
     return (
         <div>
             <div className='flex justify-between'>
-                <div className='flex justify-start pt-2 pl-1 gap-2'>
+                <div className='flex justify-start mt-2 ml-1 gap-2'>
                     <select  className='' value={fontSize} onChange={handleFontSizeChange}>
                         <option value={'12px'}>12px</option>
                         <option value={'13px'}>13px</option>
@@ -90,13 +90,13 @@ const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, l
                 <div>
                     <div className="flex items-center justify-end">
                         {showAllClients && (
-                        <div className="grid grid-flow-col auto-cols-fr gap-2">
+                        <div className="grid grid-flow-col auto-cols-fr gap-3">
                             {clients.slice(1).map((client) => (  
                             <Client key={client.socketId} username={client.username} />
                             ))}
                         </div>
                         )}
-                        <div className="flex items-center gap-4 ml-4">
+                        <div className="flex items-center gap-3 ml-3">
                         {clients.length > 0 && (
                             <Client key={clients[0].socketId} username={clients[0].username} />
                         )}
