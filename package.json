@@ -6,15 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "node server.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "server:dev": "nodemon server.js",
-    "start": "node server.js"
+    "server:dev": "nodemon server.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.3",
     "axios": "^1.6.8",
     "codemirror": "^5.65.16",
+    "cors": "^2.8.5",
     "express": "^4.19.2",
     "file-saver": "^2.0.5",
     "react": "^18.2.0",

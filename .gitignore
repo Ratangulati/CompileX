@@ -25,3 +25,4 @@ ex_code
 *.njsproj
 *.sln
 *.sw?
+.vercel
