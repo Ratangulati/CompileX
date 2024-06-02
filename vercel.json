@@ -6,22 +6,18 @@
         "use": "@vercel/node"
       },
       {
-        "src": "vite.config.js",
-        "use": "@vercel/static-build",
-        "config": {
-          "distDir": "dist"
-        }
+        "src": "package.json",
+        "use": "@vercel/static-build"
       }
     ],
     "routes": [
       {
-        "src": "/(.*)",
+        "src": "/api/(.*)",
         "dest": "/server.js"
       },
       {
         "src": "/(.*)",
-        "dest": "/index.html"
+        "dest": "/dist/index.html"
       }
     ]
-  }
-  
+}  
