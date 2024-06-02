@@ -6,7 +6,7 @@ import { Server } from 'socket.io';
 const server = http.createServer(app);
 const io = new Server(server);
 
-const rooms = {}; // Object to store rooms and their clients
+const rooms = {}; 
 
 io.on('connection', (socket) => {
     console.log('New client connected:', socket.id);
@@ -16,26 +16,20 @@ io.on('connection', (socket) => {
         socket.join(roomId);
 
         if (!username || username.trim() === '') {
-          // Handle the case where the username is undefined or an empty string
           socket.emit('join-error', 'Username is required');
           return;
         }
 
-        // Initialize the room if it doesn't exist
         if (!rooms[roomId]) {
             rooms[roomId] = { clients: {} };
         }
 
-        // Remove existing client with the same username
         delete rooms[roomId].clients[username];
 
-        // Add the client to the room
         rooms[roomId].clients[username] = { socketId: socket.id, username };
 
-        // Get the client list as an array
         const clientList = Object.values(rooms[roomId].clients);
 
-        // Broadcast the updated client list to the room
         io.to(roomId).emit('join', {
             clients: clientList,
             username,
@@ -66,15 +60,13 @@ io.on('connection', (socket) => {
         const rooms = Object.keys(socket.rooms);
         rooms.forEach((roomId) => {
             if (roomId !== socket.id) {
-                // Remove the client from the room
+                
                 const room = rooms[roomId];
                 const clientUsername = socket.data.username;
                 delete room.clients[clientUsername];
 
-                // Get the updated client list as an array
                 const clientList = Object.values(room.clients);
 
-                // Broadcast the updated client list to the room
                 io.to(roomId).emit('join', {
                     clients: clientList,
                     username: clientUsername,

@@ -9,7 +9,7 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "server:dev": "nodemon server.js",
-    "server:prod": "node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.3",
