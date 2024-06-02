@@ -3,6 +3,7 @@ const app = express();
 import http from 'http';
 import path from 'path';
 import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -11,11 +12,14 @@ const io = new Server(server, {
     }
 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.static('dist'))
 app.use((req, res, next) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
-
+ 
 
 const rooms = {}; 
 

@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "start": "node server.js",
+    "build": "vite build ",
+    "start": "npm run build && npm run server:prod",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "server:dev": "nodemon server.js"
+    "preview": "vite preview --port 3000",
+    "server:dev": "nodemon server.js",
+    "server:prod": "node server.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.3",
