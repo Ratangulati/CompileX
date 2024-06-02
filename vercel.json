@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
       {
-        "src": "package.json",
+        "src": "server.js",
         "use": "@vercel/node"
       },
       {
@@ -23,6 +23,5 @@
         "src": "/(.*)",
         "dest": "server.js"
       }
-    ],
-    "includedFiles": ["server.js"]
+    ]
   }
