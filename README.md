@@ -1,9 +1,7 @@
 # CompileX
 
-## What is CompileX
-
-![image](https://github.com/Ratangulati/CompileX/src/assets/homePage.png)
-![image](https://github.com/Ratangulati/CompileX/src/assets/editorPage.png)
+![image](https://github.com/Ratangulati/CompileX/assets/116749593/04be600f-e9fa-4566-9781-866ff1560341)
+![image](https://github.com/Ratangulati/CompileX/assets/116749593/2beea6c6-f398-47e5-b0f6-4ff8031ed53d)
 
 ### CompileX is a realtime collaborative code editor/compiler which helps users to connect, share, code & debug together in a seamless and engaging way.
 
@@ -26,8 +24,6 @@
 - **Backend:** 
     - Node.js
     - Express.js
-
-- **WebSocket:**
     - Socket.io
 
 - **Editor & Code Compilation:** 
@@ -39,17 +35,18 @@
 ## Features
 - **Responsive Design:** A responsive and mobile & web friendly UI to provide a consistent experience across devices.
 
-- **Stylish UI with Tailwind CSS:** Utilizing the power of Tailwind CSS to create a visually appealing and customizable user interface.
-
 - **Realtime Collaboration:** Users can collaborate in real-time, making it easy to work together on
 
 - **Code Compilation:** Compile your code with judgeO and get the result in realtime.
+
+- **Stylish UI with Tailwind CSS:** Utilizing the power of Tailwind CSS to create a visually appealing and customizable user interface.
 
 - **Code Editor:** Using CodeMirror to write your code and get the syntax highlighting and debugging features.
 
 - **Code Sharing:** Share your code with your friends and collaborate on the same code.
 
 - **Code Snippets:** Use code snippets to quickly insert common code patterns.
+
 
 ## Getting Started
 ### Prerequisites
@@ -104,7 +101,7 @@
 VITE_BACKEND_URL=http://localhost:3000
 ```
 
-## How to Contibute?
+## How to Contribute?
 
 - Make sure you have [Node.js](https://nodejs.org/) installed.
 - Make sure you have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed.
