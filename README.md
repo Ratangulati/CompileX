@@ -104,6 +104,6 @@
 VITE_BACKEND_URL=http://localhost:3000
 ```
 
-## How to Contribute 🤔
+## How to Contribute 
 
 To know how to contribute to the project visit [CONTRIBUTING.md](CONTRIBUTING.md).
