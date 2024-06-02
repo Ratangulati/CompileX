@@ -41,14 +41,11 @@
 
 - **Code Compilation:** Compile your code with judgeO and get the result in realtime.
 
-- **Code Snippets:** Use code snippets to quickly insert common code patterns.
-
-- **Stylish UI with Tailwind CSS:** Utilizing the power of Tailwind CSS to create a visually appealing and customizable user interface.
+- **Code Sharing:** Share your code with your friends and collaborate on the same code.
 
 - **Code Editor:** Using CodeMirror to write your code and get the syntax highlighting and debugging features.
 
-- **Code Sharing:** Share your code with your friends and collaborate on the same code.
-
+- **Stylish UI with Tailwind CSS:** Utilizing the power of Tailwind CSS to create a visually appealing and customizable user interface.
 
 
 ## Getting Started
