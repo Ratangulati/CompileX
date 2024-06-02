@@ -1,9 +1,11 @@
 # CompileX
 
 ![image](https://github.com/Ratangulati/CompileX/assets/116749593/04be600f-e9fa-4566-9781-866ff1560341)
+
 ![image](https://github.com/Ratangulati/CompileX/assets/116749593/2beea6c6-f398-47e5-b0f6-4ff8031ed53d)
 
-### CompileX is a realtime collaborative code editor/compiler which helps users to connect, share, code & debug together in a seamless and engaging way.
+## CompileX is a realtime collaborative code editor/compiler which helps users to connect, share, code & debug together in a seamless and engaging way.
+
 
 ## Table of Contents
 * [Technologies Used](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#technologies-used)
@@ -11,7 +13,7 @@
 * [Getting Started](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#getting-started)
     * [Pre-requisites](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#prerequisites)
     * [Installation](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#installation)
-* [How to Contribute?](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#how-to-contribute?)
+* [How to Contribute?](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#how-to-contribute)
 
 
 ## Technologies Used
@@ -101,7 +103,7 @@
 VITE_BACKEND_URL=http://localhost:3000
 ```
 
-## How to Contribute?
+## How to Contribute
 
 - Make sure you have [Node.js](https://nodejs.org/) installed.
 - Make sure you have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed.
