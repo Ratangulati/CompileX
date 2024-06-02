@@ -13,47 +13,46 @@
 * [Getting Started](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#getting-started)
     * [Pre-requisites](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#prerequisites)
     * [Installation](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#installation)
+* [How to Contribute?](https://github.com/Ratangulati/CompileX?tab=readme-ov-file#how-to-contribute?)
 
 
-## Technoligies Used
+## Technologies Used
 
--**Frontend:**
- - React
- - Javascript
- - Tailwind CSS
+- **Frontend:**
+    - React
+    - Javascript
+    - Tailwind CSS
 
--**Backend:** 
- - Node.js
- - Express.js
+- **Backend:** 
+    - Node.js
+    - Express.js
 
--**WebSocket:**
- - Socket.io
+- **WebSocket:**
+    - Socket.io
 
--**Editor & Code Compilation:** 
- - CodeMirror
- - judgeO
+- **Editor & Code Compilation:** 
+    - CodeMirror
+    - judgeO
 
--**External libraries used** 
- - React-Toastify
- - uuid
- - tippy.js
- - react-select
- - react-avatar
- - nodemon
 
 
 ## Features
-
 - **Responsive Design:** A responsive and mobile & web friendly UI to provide a consistent experience across devices.
+
 - **Stylish UI with Tailwind CSS:** Utilizing the power of Tailwind CSS to create a visually appealing and customizable user interface.
+
+- **Realtime Collaboration:** Users can collaborate in real-time, making it easy to work together on
+
 - **Code Compilation:** Compile your code with judgeO and get the result in realtime.
+
 - **Code Editor:** Using CodeMirror to write your code and get the syntax highlighting and debugging features.
+
 - **Code Sharing:** Share your code with your friends and collaborate on the same code.
+
 - **Code Snippets:** Use code snippets to quickly insert common code patterns.
 
-
 ## Getting Started
-### Prerequiites
+### Prerequisites
 
 - Node.js and npm installed on your machine.
 
@@ -63,7 +62,7 @@
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/Ratangulati/CompileX.git
+    git clone https://github.com/Ratangulati/CompileX
     ``` 
 
 2. Navigate to the project directory:
@@ -81,7 +80,7 @@
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/Ratangulati/CompileX.git
+    git clone https://github.com/Ratangulati/CompileX
     ``` 
 
 2. Navigate to the project directory:
@@ -100,12 +99,12 @@
     ```
     The app should now be running at [http://localhost:3000](http://localhost:3000).
 
-6. Example .env You can be used in your localhost
+6. Example .env You can use in your localhost
 ```
 VITE_BACKEND_URL=http://localhost:3000
 ```
 
-## How to Contibute
+## How to Contibute?
 
 - Make sure you have [Node.js](https://nodejs.org/) installed.
 - Make sure you have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed.
@@ -114,13 +113,13 @@ VITE_BACKEND_URL=http://localhost:3000
 
 ### Setup guidelines 🪜
 
-Follow these steps to setup OpenGrame on your local machine
+Follow these steps to setup CompileX on your local machine
 
 1. [Fork](https://github.com/Ratangulati/CompileX.git) the project
 2. Clone the project to run on your local machine using the following command:
 
    ```sh
-   git clone https://github.com/<your_github_username>/OpenGrame.git
+   git clone https://github.com/<your_github_username>/CompileX.git
    ```
 
 3. Get into the root directory
@@ -152,7 +151,7 @@ Follow these steps to setup OpenGrame on your local machine
 > 1. After forking and cloning the repo(as mentioned above), get into the project directory:
 >
 > ```bash
-> cd OpenGrame/
+> cd CompileX/
 > ```
 >
 > 2. Start the docker container with:
