@@ -92,7 +92,7 @@
 
 5. Start the development server:
     ```bash
-    npm run start
+    npm start
     ```
     The app should now be running at [http://localhost:3000](http://localhost:3000).
 
