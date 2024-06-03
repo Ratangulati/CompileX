@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  compile-x:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,4 +10,4 @@ services:
     volumes:
       - .:/app
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=development 
