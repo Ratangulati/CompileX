@@ -37,7 +37,7 @@
 ## Features
 - **Responsive Design:** A responsive and mobile & web friendly UI to provide a consistent experience across devices.
 
-- **Realtime Collaboration:** Users can collaborate in real-time, making it easy to work together on
+- **Realtime Collaboration:** Users can collaborate in real-time, making it easy to work together.
 
 - **Code Compilation:** Compile your code with judgeO and get the result in realtime.
 
