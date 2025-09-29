@@ -8,6 +8,9 @@ export const initSocket = async () => {
         transports: ['websocket'],
     }
 
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+    // Get backend URL from environment variable or use current origin
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+    console.log('Connecting to backend:', BACKEND_URL);
+    
     return io(BACKEND_URL, options);
 }
