@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: compilex
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run server:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: compilex-db
+          property: connectionString
+      - key: VITE_BACKEND_URL
+        value: https://compilex.onrender.com
+    healthCheckPath: /api/health
+
+databases:
+  - name: compilex-db
+    plan: free

@@ -759,8 +759,8 @@ const javascriptDefault = getDefaultCode('javascript');
         
         // Remove from folder if it exists in a folder
         const newFolders = folders.map(folder => ({
-            ...folder,
-            files: folder.files.filter(file => file.id !== fileId)
+                ...folder,
+                files: folder.files.filter(file => file.id !== fileId)
         }));
         setFolders(newFolders);
         
@@ -1016,20 +1016,20 @@ const javascriptDefault = getDefaultCode('javascript');
             
             // Also update the file content in explorer files (persistent storage)
             const updatedExplorerFiles = explorerFiles.map(file => 
-                file.id === files[activeFile].id 
-                    ? { ...file, content: newCode }
-                    : file
+                    file.id === files[activeFile].id 
+                        ? { ...file, content: newCode }
+                        : file
             );
             setExplorerFiles(updatedExplorerFiles);
             
             // Update folder files if the file is in a folder
             const updatedFolders = folders.map(folder => ({
-                ...folder,
-                files: folder.files.map(file => 
-                    file.id === files[activeFile].id 
-                        ? { ...file, content: newCode }
-                        : file
-                )
+                    ...folder,
+                    files: folder.files.map(file => 
+                        file.id === files[activeFile].id 
+                            ? { ...file, content: newCode }
+                            : file
+                    )
             }));
             setFolders(updatedFolders);
 
@@ -1038,11 +1038,11 @@ const javascriptDefault = getDefaultCode('javascript');
                 clearTimeout(window.roomStateUpdateTimeout);
             }
             window.roomStateUpdateTimeout = setTimeout(() => {
-                emitRoomStateUpdate({
-                    files: updatedFiles,
-                    explorerFiles: updatedExplorerFiles,
-                    folders: updatedFolders
-                });
+            emitRoomStateUpdate({
+                files: updatedFiles,
+                explorerFiles: updatedExplorerFiles,
+                folders: updatedFolders
+            });
             }, 500); // Wait 500ms before updating database
         }
     };
@@ -1354,7 +1354,7 @@ const javascriptDefault = getDefaultCode('javascript');
                     {/* Editor Area */}
                     <div className="flex-1 flex flex-col">
                         {/* VS Code Tabs - Always show tab bar */}
-                        <VSTabs
+                        <VSTabs 
                             files={files}
                             activeFile={activeFile}
                             onFileSelect={handleFileSelect}
@@ -1372,7 +1372,7 @@ const javascriptDefault = getDefaultCode('javascript');
                                         initialCode={code} 
                                         onSelectChange={onSelectChange} 
                                         language={language} 
-                                        files={files} 
+                                        files={files}
                                         activeFile={activeFile}
                                     />
                                 </>
@@ -1393,7 +1393,7 @@ const javascriptDefault = getDefaultCode('javascript');
                 <div className="w-80 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                     <VSOutputPanel outputDetails={outputDetails} />
                 </div>
-            </div>
+            </div>  
         </div>
     );
 };
