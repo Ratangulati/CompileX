@@ -35,7 +35,7 @@ const Home = () => {
 
     return (
         <div className='bg-black h-screen flex justify-center items-center'>
-            <div className='bg-gray-800 rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl'>
+            <div className='bg-gray-800 rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl border border-gray-600'>
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-3 mb-4">
