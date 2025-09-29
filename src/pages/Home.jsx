@@ -35,7 +35,7 @@ const Home = () => {
 
     return (
         <div className='bg-black h-screen flex justify-center items-center'>
-            <div className='bg-gray-800 rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl border border-gray-600'>
+            <div className='bg-black rounded-lg p-8 w-full max-w-md mx-4 shadow-2xl border border-gray-600'>
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-3 mb-4">
@@ -56,7 +56,7 @@ const Home = () => {
                         <label className='block text-white text-sm font-medium mb-2'>Room ID</label>
                         <input 
                             type="text" 
-                            className='w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all' 
+                            className='w-full p-3 bg-[#18181b] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all' 
                             placeholder='Enter room ID' 
                             value={roomId} 
                             onChange={(e) => setRoomId(e.target.value)} 
@@ -69,7 +69,7 @@ const Home = () => {
                         <label className='block text-white text-sm font-medium mb-2'>Username</label>
                         <input 
                             type="text" 
-                            className='w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all' 
+                            className='w-full p-3 bg-[#18181b] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all' 
                             placeholder='Enter your username' 
                             value={username} 
                             onChange={(e) => setUsername(e.target.value)} 
