@@ -35,10 +35,10 @@ const OutputWindow = ({ outputDetails }) => {
   };
   return (
     <>
-      <h1 className="font-bold text-xl bg-clip-text">
+      <h1 className="font-normal text-sm bg-clip-text border-b-2 border-[#f5f5f5]">
         Output:
       </h1>
-      <div className="w-full h-64 bg-[#1e293b] text-white font-normal text-sm overflow-y-auto p-1 rounded-lg">
+      <div className="w-full h-dvh bg-[#fff] text-[#000] font-normal text-sm overflow-y-auto p-4 rounded-lg">
         {outputDetails ? <> {getOutput() }</> : null}
       </div>
     </>

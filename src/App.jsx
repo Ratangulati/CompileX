@@ -2,32 +2,32 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Home from "./pages/Home"
 import EditorPage from "./pages/EditorPage"
 import {Toaster} from 'react-hot-toast'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
 
   return (
-    <>
-    <div>
-      <Toaster 
-      position="top-right"
-      toastOptions={{
-        success: {
-          theme: {
-            primary: '#4aed88'
+    <ThemeProvider>
+      <div>
+        <Toaster 
+        position="top-right"
+        toastOptions={{
+          success: {
+            theme: {
+              primary: '#4aed88'
+            }
           }
-        }
-      }}>
-      </Toaster>
-    </div>
+        }}>
+        </Toaster>
+      </div>
 
-    <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/editor/:roomId" element={<EditorPage />} />
-        </Routes>
-    </BrowserRouter>
-    
-    </>
+      <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/editor/:roomId" element={<EditorPage />} />
+          </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 

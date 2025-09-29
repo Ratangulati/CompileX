@@ -1,66 +1,73 @@
 export const customStyles = {
   control: (provided, state) => ({
     ...provided,
-    backgroundColor: "#1e293b",
-    borderColor: "#fff",
-    borderWidth: "1px",
-    borderRadius: "4px",
-    color: "#fff",
-    boxShadow: state.isFocused ? "0 0 0 1px #fff" : "none",
+    backgroundColor: "#fff",
+    borderColor: state.isFocused ? "#aaa" : "#ddd",
+    borderRadius: "6px",
+    minHeight: "36px",
+    width: "130px",
+    boxShadow: state.isFocused ? "0 0 0 1px #aaa" : "none",
     "&:hover": {
-      borderColor: "#fff"
-    }
+      borderColor: "#aaa",
+    },
+    fontWeight: "normal",
+    fontSize: "14px",
   }),
   menu: (provided) => ({
     ...provided,
-    backgroundColor: "#1e293b",
-    borderColor: "#fff",
-    borderWidth: "1px",
-    borderRadius: "4px",
-    color: "#fff",
-    width: "130px", 
-  }),
-  menuList: (provided) => ({
-    ...provided,
-    padding: 0,
-  }),
-  singleValue: (provided) => ({
-    ...provided,
-    color: "#fff"
+    backgroundColor: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    marginTop: "4px",
+    width: "130px",
+    maxHeight: "none",
+    zIndex: 9999, // Ensure dropdown appears above other elements
   }),
   option: (provided, state) => ({
     ...provided,
-    backgroundColor: state.isSelected ? "#374151" : "#1e293b",
-    color: state.isSelected ? "#fff" : "#fff",
-    "&:hover": {
-      backgroundColor: "#374151",
-      color: "#fff"
-    }
+    backgroundColor: state.isSelected
+      ? "#f5f5f5"
+      : state.isFocused
+      ? "#f5f5f5"
+      : "#fff",
+    color: "#000",
+    cursor: "pointer",
+    fontWeight: "normal",
+    fontSize: "14px",
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: "#000",
+    fontWeight: "normal",
+    fontSize: "14px",
   }),
   placeholder: (provided) => ({
     ...provided,
-    color: "#fff"
+    color: "#888",
+    fontWeight: "normal",
+    fontSize: "14px",
   }),
   dropdownIndicator: (provided) => ({
     ...provided,
-    color: "#fff",
+    color: "#666",
     "&:hover": {
-      color: "#fff"
-    }
+      color: "#000",
+    },
   }),
-  indicatorSeparator: (provided) => ({
-    ...provided,
-    backgroundColor: "#fff"
+  indicatorSeparator: () => ({
+    display: "none",
   }),
   clearIndicator: (provided) => ({
     ...provided,
-    color: "#fff",
+    color: "#666",
     "&:hover": {
-      color: "#fff"
-    }
+      color: "#000",
+    },
   }),
   input: (provided) => ({
     ...provided,
-    color: "#fff"
-  })
+    color: "#000",
+    fontWeight: "normal",
+    fontSize: "14px",
+  }),
 };
