@@ -70,19 +70,11 @@ io.on('connection', (socket) => {
             // Get updated room data
             const updatedRoom = await Room.findOne({ roomId });
             
-            // Remove duplicates and ensure unique usernames
-            const uniqueMembers = [];
-            const seenUsernames = new Set();
-            
-            updatedRoom.members.forEach(member => {
-                if (!seenUsernames.has(member.username)) {
-                    seenUsernames.add(member.username);
-                    uniqueMembers.push({
-                        username: member.username,
-                        socketId: member.socketId
-                    });
-                }
-            });
+            // Build member list (allow same username across multiple sockets)
+            const memberList = updatedRoom.members.map(member => ({
+                username: member.username,
+                socketId: member.socketId
+            }));
 
             // Emit room state to the joining user
             socket.emit('room-state', {
@@ -97,13 +89,13 @@ io.on('connection', (socket) => {
 
             // Emit join event to all users in room
             io.to(roomId).emit('join', {
-                clients: uniqueMembers,
+                clients: memberList,
                 username,
                 socketId: socket.id,
             });
 
             console.log(`${username} joined room ${roomId}`);
-            console.log('Existing clients in room:', uniqueMembers);
+            console.log('Existing clients in room:', memberList);
         } catch (error) {
             console.error('Error joining room:', error);
             socket.emit('join-error', 'Failed to join room');

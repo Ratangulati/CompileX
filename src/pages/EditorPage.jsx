@@ -21,6 +21,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { FiPlay, FiUsers, FiSun, FiMoon, FiFileText } from "react-icons/fi";
 import { IoPlayOutline } from 'react-icons/io5';
 import { GoShareAndroid } from 'react-icons/go';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import FileExplorer from '../components/FileExplorer';
 
 
@@ -84,6 +86,12 @@ const javascriptDefault = getDefaultCode('javascript');
 
     const socketRef = useRef(null);
     const codeRef = useRef(javascriptDefault);
+    // Monotonic numeric ID generator to avoid duplicate IDs across quick creations
+    const idCounterRef = useRef(Date.now());
+    const getNextId = () => {
+        idCounterRef.current += 1;
+        return idCounterRef.current;
+    };
     const location = useLocation();
     const {roomId} = useParams();
     const reactNavigator = useNavigate();
@@ -129,6 +137,7 @@ const javascriptDefault = getDefaultCode('javascript');
     // Open tabs - files currently open in editor (room-specific)
     const [files, setFiles] = useState([]);
     const [activeFile, setActiveFile] = useState(0);
+    const activeFileIdRef = useRef(null);
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
     const [showMembersDropdown, setShowMembersDropdown] = useState(false);
     const [showNewFileInput, setShowNewFileInput] = useState(false);
@@ -251,6 +260,7 @@ const javascriptDefault = getDefaultCode('javascript');
                         // Determine the active file index
                         const activeIndex = dbActiveFile !== undefined && dbActiveFile !== null ? dbActiveFile : 0;
                         setActiveFile(activeIndex);
+                        activeFileIdRef.current = dbFiles[activeIndex]?.id ?? null;
                         
                         // Get the active file's content from the files array, not from currentCode
                         const activeFileObj = dbFiles[activeIndex];
@@ -268,6 +278,7 @@ const javascriptDefault = getDefaultCode('javascript');
                         // If no files in database, start with empty state
                         setFiles([]);
                         setActiveFile(0);
+                        activeFileIdRef.current = null;
                         setCode('');
                         setLanguage(languageOptions[0]);
                         setCompileLanguage(languageOptions[0]);
@@ -579,9 +590,11 @@ const javascriptDefault = getDefaultCode('javascript');
     };
 
     const handleFileCreateInFolder = (fileName, folderId) => {
+        // Ensure current buffer is saved before creating new file
+        persistCurrentBuffer();
         const detectedLanguage = getLanguageFromExtension(fileName);
         const newFile = {
-            id: Date.now(),
+            id: getNextId(),
             name: fileName,
             content: '', // Empty content instead of default code
             language: detectedLanguage,
@@ -589,71 +602,76 @@ const javascriptDefault = getDefaultCode('javascript');
             folderId: folderId
         };
         
-        setFolders(prevFolders => 
-            prevFolders.map(folder => 
-                folder.id === folderId 
-                    ? { ...folder, files: [...folder.files, newFile] }
-                    : folder
-            )
-        );
-        
-        // Add to explorer files (persistent file system)
-        setExplorerFiles(prev => [...prev, newFile]);
-        
-        // Add to main files array for editor
+        // Use functional updates to ensure we have current state
         setFiles(prevFiles => {
-            if (prevFiles.length === 0 || (prevFiles.length === 1 && prevFiles[0].isWelcome)) {
-                return [newFile];
-            }
-            return [...prevFiles, newFile];
-        });
-        setActiveFile(files.length);
-        setCode(newFile.content);
-        setLanguage(detectedLanguage);
-        setCompileLanguage(detectedLanguage);
-        codeRef.current = newFile.content;
-        
-        // Force CodeMirror to update its content
-        setTimeout(() => {
-            const codeMirrorElement = document.querySelector('.CodeMirror');
-            if (codeMirrorElement && codeMirrorElement.CodeMirror) {
-                codeMirrorElement.CodeMirror.setValue(newFile.content);
-            }
-        }, 100);
-        
-        // Emit room state update to persist file creation
-        setTimeout(() => {
-            // Use the updated state values instead of stale ones
-            const updatedFiles = files.length === 0 || (files.length === 1 && files[0].isWelcome) 
-                ? [newFile] 
-                : [...files, newFile];
-            const updatedExplorerFiles = [...explorerFiles, newFile];
-            const updatedFolders = folders.map(folder => 
-                folder.id === folderId 
-                    ? { ...folder, files: [...folder.files, newFile] }
-                    : folder
-            );
+            const updatedFiles = prevFiles.length === 0 || (prevFiles.length === 1 && prevFiles[0].isWelcome)
+                ? [newFile]
+                : [...prevFiles, newFile];
             
-            emitRoomStateUpdate({
-                files: updatedFiles,
-                explorerFiles: updatedExplorerFiles,
-                folders: updatedFolders,
-                activeFile: files.length,
-                currentLanguage: detectedLanguage,
-                currentCode: newFile.content
+            const newActiveFileIndex = prevFiles.length === 0 || (prevFiles.length === 1 && prevFiles[0].isWelcome) ? 0 : prevFiles.length;
+            
+            setActiveFile(newActiveFileIndex);
+            activeFileIdRef.current = newFile.id;
+            setCode(newFile.content);
+            setLanguage(detectedLanguage);
+            setCompileLanguage(detectedLanguage);
+            codeRef.current = newFile.content;
+            
+            // Update folders
+            setFolders(prevFolders => {
+                const updatedFolders = prevFolders.map(folder => 
+                    folder.id === folderId 
+                        ? { ...folder, files: [...folder.files, newFile] }
+                        : folder
+                );
+                
+                // Update explorer files
+                setExplorerFiles(prevExplorerFiles => {
+                    const updatedExplorerFiles = [...prevExplorerFiles, newFile];
+                    
+                    // Save to database after all state updates
+                    setTimeout(() => {
+                        if (socketRef.current && socketRef.current.connected) {
+                            emitRoomStateUpdate({
+                                files: updatedFiles,
+                                explorerFiles: updatedExplorerFiles,
+                                folders: updatedFolders,
+                                activeFile: newActiveFileIndex,
+                                currentLanguage: detectedLanguage,
+                                currentCode: newFile.content
+                            });
+                        }
+                    }, 100);
+                    
+                    return updatedExplorerFiles;
+                });
+                
+                return updatedFolders;
             });
-        }, 200);
+            
+            // Force CodeMirror to update its content
+            setTimeout(() => {
+                const codeMirrorElement = document.querySelector('.CodeMirror');
+                if (codeMirrorElement && codeMirrorElement.CodeMirror) {
+                    codeMirrorElement.CodeMirror.setValue(newFile.content);
+                }
+            }, 100);
+            
+            return updatedFiles;
+        });
     };
 
     // File management functions
     const handleFileCreate = (fileName) => {
+        // Ensure current buffer is saved before creating new file
+        persistCurrentBuffer();
         const detectedLanguage = getLanguageFromExtension(fileName);
         
         // Only add to folder if a folder is explicitly selected
         const targetFolderId = selectedFolder;
         
         const newFile = {
-            id: Date.now(),
+            id: getNextId(),
             name: fileName,
             content: '', // Empty content instead of default code
             language: detectedLanguage,
@@ -661,107 +679,163 @@ const javascriptDefault = getDefaultCode('javascript');
             folderId: targetFolderId
         };
         
-        // Add to explorer files (persistent file system)
-        setExplorerFiles(prev => [...prev, newFile]);
-        
-        // If file is being added to a folder, update the folder's files
-        if (targetFolderId) {
-            setFolders(prevFolders => 
-                prevFolders.map(folder => 
-                    folder.id === targetFolderId 
-                        ? { ...folder, files: [...folder.files, newFile] }
-                        : folder
-                )
-            );
-        }
-        
-        // If no files are open or only welcome page exists, replace it
-        if (files.length === 0 || (files.length === 1 && files[0].isWelcome)) {
-            setFiles([newFile]);
-            setActiveFile(0);
-        } else {
-            setFiles(prevFiles => [...prevFiles, newFile]);
-            setActiveFile(files.length);
-        }
-        
-        // Update current language and code
-        setLanguage(detectedLanguage);
-        setCompileLanguage(detectedLanguage);
-        setCode(newFile.content);
-        codeRef.current = newFile.content;
-        
-        // Force CodeMirror to update its content
-        setTimeout(() => {
-            const codeMirrorElement = document.querySelector('.CodeMirror');
-            if (codeMirrorElement && codeMirrorElement.CodeMirror) {
-                codeMirrorElement.CodeMirror.setValue(newFile.content);
-            }
-        }, 100);
-        
-        // Emit room state update to persist file creation
-        setTimeout(() => {
-            // Use the updated state values instead of stale ones
-            const updatedFiles = files.length === 0 || (files.length === 1 && files[0].isWelcome) 
-                ? [newFile] 
-                : [...files, newFile];
-            const updatedExplorerFiles = [...explorerFiles, newFile];
-            const updatedFolders = targetFolderId ? folders.map(folder => 
-                folder.id === targetFolderId 
-                    ? { ...folder, files: [...folder.files, newFile] }
-                    : folder
-            ) : folders;
-            const newActiveFile = files.length === 0 || (files.length === 1 && files[0].isWelcome) ? 0 : files.length;
+        // Use functional updates to get current state values
+        setFiles(prevFiles => {
+            const updatedFiles = prevFiles.length === 0 || (prevFiles.length === 1 && prevFiles[0].isWelcome)
+                ? [newFile]
+                : [...prevFiles, newFile];
             
-            emitRoomStateUpdate({
-                files: updatedFiles,
-                explorerFiles: updatedExplorerFiles,
-                folders: updatedFolders,
-                activeFile: newActiveFile,
-                currentLanguage: detectedLanguage,
-                currentCode: newFile.content
+            const newActiveFileIndex = prevFiles.length === 0 || (prevFiles.length === 1 && prevFiles[0].isWelcome) ? 0 : prevFiles.length;
+            
+            // Update explorer files
+            setExplorerFiles(prevExplorerFiles => {
+                const updatedExplorerFiles = [...prevExplorerFiles, newFile];
+                
+                // Update folders if needed
+                setFolders(prevFolders => {
+                    const updatedFolders = targetFolderId 
+                        ? prevFolders.map(folder => 
+                            folder.id === targetFolderId 
+                                ? { ...folder, files: [...folder.files, newFile] }
+                                : folder
+                        )
+                        : prevFolders;
+                    
+                    // Save to database after state updates
+                    setTimeout(() => {
+                        if (socketRef.current && socketRef.current.connected) {
+                            emitRoomStateUpdate({
+                                files: updatedFiles,
+                                explorerFiles: updatedExplorerFiles,
+                                folders: updatedFolders,
+                                activeFile: newActiveFileIndex,
+                                currentLanguage: detectedLanguage,
+                                currentCode: newFile.content
+                            });
+                        }
+                    }, 100);
+                    
+                    return updatedFolders;
+                });
+                
+                return updatedExplorerFiles;
             });
-        }, 200);
-        
-        // Update localStorage
-        localStorage.setItem('selectedLanguage', JSON.stringify(detectedLanguage));
-        
-        // Emit language change to other clients
-        if (socketRef.current) {
-            socketRef.current.emit('language:change', { 
-                language: detectedLanguage,
-                fileId: newFile.id
-            });
-        }
-
-        // Emit room state update to database
-        setTimeout(() => {
-            emitRoomStateUpdate({
-                files: files.length === 0 || (files.length === 1 && files[0].isWelcome) ? [newFile] : [...files, newFile],
-                folders: targetFolderId ? folders.map(folder => 
-                    folder.id === targetFolderId 
-                        ? { ...folder, files: [...folder.files, newFile] }
-                        : folder
-                ) : folders,
-                explorerFiles: [...explorerFiles, newFile]
-            });
-        }, 100);
+            
+            // Set active file and update editor
+            setActiveFile(newActiveFileIndex);
+            activeFileIdRef.current = newFile.id;
+            setLanguage(detectedLanguage);
+            setCompileLanguage(detectedLanguage);
+            setCode(newFile.content);
+            codeRef.current = newFile.content;
+            
+            // Force CodeMirror to update its content
+            setTimeout(() => {
+                const codeMirrorElement = document.querySelector('.CodeMirror');
+                if (codeMirrorElement && codeMirrorElement.CodeMirror) {
+                    codeMirrorElement.CodeMirror.setValue(newFile.content);
+                }
+            }, 100);
+            
+            // Emit language change to other clients
+            if (socketRef.current && socketRef.current.connected) {
+                socketRef.current.emit('language:change', { 
+                    language: detectedLanguage,
+                    fileId: newFile.id,
+                    roomId
+                });
+            }
+            
+            return updatedFiles;
+        });
     };
 
     const handleFileSelect = (index) => {
-        setActiveFile(index);
-        const selectedFile = files[index];
-        setCode(selectedFile.content);
-        setLanguage(selectedFile.language);
-        setCompileLanguage(selectedFile.language);
-        codeRef.current = selectedFile.content;
+        // Save the current file's content before switching
+        const currentFile = files[activeFile];
+        if (currentFile && !currentFile.isWelcome && codeRef.current !== undefined) {
+            const currentFileContent = codeRef.current;
+            const currentFileId = currentFile.id;
+            
+            // Update the current file's content in all locations using functional updates
+            setFiles(prevFiles => {
+                const updated = prevFiles.map((file, i) => 
+                    i === activeFile && !file.isWelcome
+                        ? { ...file, content: currentFileContent }
+                        : file
+                );
+                
+                return updated;
+            });
+            
+            // Update explorer files
+            setExplorerFiles(prevExplorerFiles => {
+                const updated = prevExplorerFiles.map(file => 
+                    file.id === currentFileId 
+                        ? { ...file, content: currentFileContent }
+                        : file
+                );
+                
+                // Update folders
+                setFolders(prevFolders => {
+                    const updatedFolders = prevFolders.map(folder => ({
+                        ...folder,
+                        files: folder.files.map(file => 
+                            file.id === currentFileId 
+                                ? { ...file, content: currentFileContent }
+                                : file
+                        )
+                    }));
+                    
+                    // Save to database after all updates
+                    setTimeout(() => {
+                        if (socketRef.current && socketRef.current.connected) {
+                            // Get latest state
+                            setFiles(currentFiles => {
+                                setExplorerFiles(currentExplorerFiles => {
+                                    setFolders(currentFolders => {
+                                        emitRoomStateUpdate({
+                                            files: currentFiles,
+                                            explorerFiles: currentExplorerFiles,
+                                            folders: currentFolders,
+                                            activeFile: index
+                                        });
+                                        return currentFolders;
+                                    });
+                                    return updated;
+                                });
+                                return updated;
+                            });
+                        }
+                    }, 50);
+                    
+                    return updatedFolders;
+                });
+                
+                return updated;
+            });
+        }
         
-        // Force CodeMirror to update its content
-        setTimeout(() => {
-            const codeMirrorElement = document.querySelector('.CodeMirror');
-            if (codeMirrorElement && codeMirrorElement.CodeMirror) {
-                codeMirrorElement.CodeMirror.setValue(selectedFile.content);
-            }
-        }, 50);
+        // Now switch to the selected file
+        setActiveFile(index);
+        activeFileIdRef.current = files[index]?.id ?? null;
+        // Prefer the latest content from explorerFiles by ID, fallback to files[index]
+        const base = files[index];
+        const selectedFile = explorerFiles.find(f => f.id === base?.id) || base;
+        if (selectedFile) {
+            setCode(selectedFile.content || '');
+            setLanguage(selectedFile.language);
+            setCompileLanguage(selectedFile.language);
+            codeRef.current = selectedFile.content || '';
+            
+            // Force CodeMirror to update its content
+            setTimeout(() => {
+                const codeMirrorElement = document.querySelector('.CodeMirror');
+                if (codeMirrorElement && codeMirrorElement.CodeMirror) {
+                    codeMirrorElement.CodeMirror.setValue(selectedFile.content || '');
+                }
+            }, 50);
+        }
     };
 
     const handleFileOpenFromExplorer = (file) => {
@@ -772,14 +846,16 @@ const javascriptDefault = getDefaultCode('javascript');
             // File is already open, just switch to it
             handleFileSelect(existingIndex);
         } else {
-            // File is not open, add it to tabs with latest content from explorer
-            const newFiles = [...files, file];
+            // File is not open, add it to tabs with latest content from explorer (clone to avoid shared refs)
+            const opened = { ...file };
+            const newFiles = [...files, opened];
             setFiles(newFiles);
             setActiveFile(newFiles.length - 1);
-            setCode(file.content);
-            setLanguage(file.language);
-            setCompileLanguage(file.language);
-            codeRef.current = file.content;
+            activeFileIdRef.current = opened.id;
+            setCode(opened.content);
+            setLanguage(opened.language);
+            setCompileLanguage(opened.language);
+            codeRef.current = opened.content;
             
             // Force CodeMirror to update its content
             setTimeout(() => {
@@ -801,20 +877,25 @@ const javascriptDefault = getDefaultCode('javascript');
             // If there are still files, adjust active file
             if (activeFile >= index && activeFile > 0) {
                 setActiveFile(activeFile - 1);
-                setCode(newFiles[activeFile - 1].content);
-                setLanguage(newFiles[activeFile - 1].language);
-                setCompileLanguage(newFiles[activeFile - 1].language);
+                activeFileIdRef.current = newFiles[activeFile - 1]?.id ?? null;
+                const nf = newFiles[activeFile - 1];
+                setCode(nf.content);
+                setLanguage(nf.language);
+                setCompileLanguage(nf.language);
             } else if (activeFile === index && activeFile === 0) {
                 setActiveFile(0);
-                setCode(newFiles[0].content);
-                setLanguage(newFiles[0].language);
-                setCompileLanguage(newFiles[0].language);
+                activeFileIdRef.current = newFiles[0]?.id ?? null;
+                const nf = newFiles[0];
+                setCode(nf.content);
+                setLanguage(nf.language);
+                setCompileLanguage(nf.language);
             }
         } else {
             // No files left, show empty state
             setCode('');
             setLanguage({ name: 'JavaScript', value: 'javascript' });
             setCompileLanguage({ name: 'JavaScript', value: 'javascript' });
+            activeFileIdRef.current = null;
         }
         
         // File remains in explorer - we don't remove it from folders or root files
@@ -1060,11 +1141,131 @@ const javascriptDefault = getDefaultCode('javascript');
 
     // Function to emit room state updates to database
     const emitRoomStateUpdate = (stateData) => {
-        if (socketRef.current) {
+        if (socketRef.current && socketRef.current.connected) {
             socketRef.current.emit('room-state-update', {
                 roomId,
                 stateData
             });
+        }
+    };
+
+    // Persist current editor buffer into state (files, explorerFiles, folders)
+    const persistCurrentBuffer = () => {
+        if (!files[activeFile] || files[activeFile].isWelcome) return;
+        const currentContent = codeRef.current ?? code ?? '';
+        const currentId = files[activeFile].id;
+
+        setFiles(prev => prev.map((f, i) => i === activeFile ? { ...f, content: currentContent } : f));
+        setExplorerFiles(prev => prev.map(f => f.id === currentId ? { ...f, content: currentContent } : f));
+        setFolders(prev => prev.map(folder => ({
+            ...folder,
+            files: folder.files.map(f => f.id === currentId ? { ...f, content: currentContent } : f)
+        })));
+    };
+    
+    // Function to save current file explicitly
+    const handleSave = () => {
+        if (files.length === 0 || !files[activeFile] || files[activeFile].isWelcome) {
+            toast.error('No file to save');
+            return;
+        }
+
+        const currentContent = codeRef.current || code;
+        
+        // Update the current file's content
+        const updatedFiles = files.map((file, index) => 
+            index === activeFile 
+                ? { ...file, content: currentContent }
+                : file
+        );
+        
+        const updatedExplorerFiles = explorerFiles.map(file => 
+            file.id === files[activeFile].id 
+                ? { ...file, content: currentContent }
+                : file
+        );
+        
+        const updatedFolders = folders.map(folder => ({
+            ...folder,
+            files: folder.files.map(file => 
+                file.id === files[activeFile].id 
+                    ? { ...file, content: currentContent }
+                    : file
+            )
+        }));
+        
+        setFiles(updatedFiles);
+        setExplorerFiles(updatedExplorerFiles);
+        setFolders(updatedFolders);
+        
+        // Save to database immediately
+        emitRoomStateUpdate({
+            files: updatedFiles,
+            explorerFiles: updatedExplorerFiles,
+            folders: updatedFolders,
+            activeFile,
+            currentLanguage: language,
+            currentCode: currentContent
+        });
+        
+        toast.success('File saved successfully');
+    };
+
+    // Function to build folder path from folderId
+    const getFolderPath = (folderId) => {
+        if (!folderId) return '';
+        const idToFolder = new Map(folders.map(f => [f.id, f]));
+        const parts = [];
+        let current = idToFolder.get(folderId);
+        const guard = new Set();
+        while (current && !guard.has(current.id)) {
+            parts.unshift(current.name);
+            guard.add(current.id);
+            current = current.parentFolderId ? idToFolder.get(current.parentFolderId) : null;
+        }
+        return parts.join('/');
+    };
+
+    // Share: download a zip containing all worked-on files preserving folder structure
+    const handleShare = async () => {
+        try {
+            // Ensure the currently active buffer is saved into state before zipping
+            if (files[activeFile] && !files[activeFile].isWelcome) {
+                const currentContent = codeRef.current || code || '';
+                const currentId = files[activeFile].id;
+                setFiles(prev => prev.map((f, i) => i === activeFile ? { ...f, content: currentContent } : f));
+                setExplorerFiles(prev => prev.map(f => f.id === currentId ? { ...f, content: currentContent } : f));
+                setFolders(prev => prev.map(folder => ({
+                    ...folder,
+                    files: folder.files.map(f => f.id === currentId ? { ...f, content: currentContent } : f)
+                })));
+            }
+
+            const zip = new JSZip();
+            const seen = new Set();
+            const filesToExport = explorerFiles.filter(f => !f.isWelcome);
+            if (filesToExport.length === 0) {
+                toast.error('No files to share yet. Create or edit a file first.');
+                return;
+            }
+
+            filesToExport.forEach(file => {
+                if (seen.has(file.id)) return;
+                seen.add(file.id);
+                const dir = getFolderPath(file.folderId);
+                const filename = file.name || `file-${file.id}.txt`;
+                const path = dir ? `${dir}/${filename}` : filename;
+                const content = typeof file.content === 'string' ? file.content : '';
+                zip.file(path, content);
+            });
+
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const zipName = `code-${roomId || 'session'}.zip`;
+            saveAs(blob, zipName);
+            toast.success('Downloaded your files as a zip');
+        } catch (err) {
+            console.error('Share (zip) failed:', err);
+            toast.error('Failed to prepare download');
         }
     };
 
@@ -1080,41 +1281,33 @@ const javascriptDefault = getDefaultCode('javascript');
         
         // Update the active file content in open tabs
         if (files[activeFile] && !files[activeFile].isWelcome) {
-            const updatedFiles = [...files];
-            updatedFiles[activeFile] = {
-                ...updatedFiles[activeFile],
-                content: newCode
-            };
-            setFiles(updatedFiles);
-            
-            // Also update the file content in explorer files (persistent storage)
-            const updatedExplorerFiles = explorerFiles.map(file => 
-                    file.id === files[activeFile].id 
-                        ? { ...file, content: newCode }
-                        : file
-            );
-            setExplorerFiles(updatedExplorerFiles);
-            
-            // Update folder files if the file is in a folder
-            const updatedFolders = folders.map(folder => ({
-                    ...folder,
-                    files: folder.files.map(file => 
-                        file.id === files[activeFile].id 
-                            ? { ...file, content: newCode }
-                            : file
-                    )
-            }));
-            setFolders(updatedFolders);
+            const currentId = activeFileIdRef.current ?? files[activeFile].id;
+            setFiles(prev => prev.map((f) => f.id === currentId ? { ...f, content: newCode } : f));
+            setExplorerFiles(prev => prev.map(f => f.id === currentId ? { ...f, content: newCode } : f));
+            setFolders(prev => prev.map(folder => ({
+                ...folder,
+                files: folder.files.map(file => file.id === currentId ? { ...file, content: newCode } : file)
+            })));
 
             // Debounce room state updates to avoid excessive database calls
             if (window.roomStateUpdateTimeout) {
                 clearTimeout(window.roomStateUpdateTimeout);
             }
             window.roomStateUpdateTimeout = setTimeout(() => {
-            emitRoomStateUpdate({
-                files: updatedFiles,
-                explorerFiles: updatedExplorerFiles,
-                folders: updatedFolders
+            // Emit with latest state by reading from setters
+            setFiles(currentFiles => {
+                setExplorerFiles(currentExplorerFiles => {
+                    setFolders(currentFolders => {
+                        emitRoomStateUpdate({
+                            files: currentFiles,
+                            explorerFiles: currentExplorerFiles,
+                            folders: currentFolders
+                        });
+                        return currentFolders;
+                    });
+                    return currentExplorerFiles;
+                });
+                return currentFiles;
             });
             }, 500); // Wait 500ms before updating database
         }
@@ -1335,7 +1528,11 @@ const javascriptDefault = getDefaultCode('javascript');
                     {/* Action Buttons */}
                 <div className="flex items-center gap-2">
                         {/* Save Button */}
-                        <button className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+                        <button 
+                            onClick={handleSave}
+                            className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                            title="Save current file"
+                        >
                         <LuSave className="w-4 h-4 text-black dark:text-white" />
 
                             <span className="text-sm text-black dark:text-white font-medium">Save</span>
@@ -1354,7 +1551,11 @@ const javascriptDefault = getDefaultCode('javascript');
                             </span>
                         </button>
                         {/* Share Button */}
-                        <button className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+                        <button 
+                            onClick={handleShare}
+                            className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                            title="Share room URL"
+                        >
                             <GoShareAndroid className="w-4 h-4 text-black dark:text-white" />
                             <span className="text-sm text-black dark:text-white font-medium">Share</span>
                         </button>
@@ -1447,6 +1648,7 @@ const javascriptDefault = getDefaultCode('javascript');
                                         language={language} 
                                         files={files}
                                         activeFile={activeFile}
+                                        activeFileId={files[activeFile]?.id}
                                     />
                                 </>
                             ) : (

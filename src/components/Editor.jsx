@@ -14,7 +14,7 @@ import LanguagesDropdown from './Buttons/LangDropdown';
 import Client from './Client';
 import { useTheme } from '../contexts/ThemeContext';
 
-const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, language, files, activeFile}) => {
+const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, language, files, activeFile, activeFileId}) => {
     const [fontSize, setFontSize] = useState(() => {
         return localStorage.getItem('fontSize') || '13px';
     });
@@ -76,11 +76,11 @@ const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, l
                     const { origin } = changes;
                     const code = instance.getValue();
                     onCodeChange(code);
-                    if (origin !== 'setValue' && socketRef.current && files && activeFile !== null && files[activeFile]) {
+                    if (origin !== 'setValue' && socketRef.current && activeFileId) {
                         socketRef.current.emit('code-change', {
                             roomId,
                             code,
-                            fileId: files[activeFile].id
+                            fileId: activeFileId
                         });
                     }
                 });
@@ -137,9 +137,8 @@ const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, l
         if(socketRef.current) {
             const handleCodeChange = ({code, fileId}) => {
                 // Only update if the change is for the currently active file
-                if (files && activeFile !== null && files[activeFile]) {
-                    const currentFile = files[activeFile];
-                    if (fileId === currentFile.id && code !== null && editorRef.current && editorRef.current.getValue() !== code) {
+                if (activeFileId) {
+                    if (fileId === activeFileId && code !== null && editorRef.current && editorRef.current.getValue() !== code) {
                         // Preserve cursor position when updating from other users
                         const cursor = editorRef.current.getCursor();
                         

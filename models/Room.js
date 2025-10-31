@@ -106,16 +106,13 @@ RoomSchema.statics.findOrCreate = async function(roomId) {
 // Method to add a member to the room
 RoomSchema.methods.addMember = async function(username, socketId) {
     try {
-        // First remove any existing members with same username or socketId
+        // First remove any existing members with same socketId only (allow same usernames)
         await this.constructor.findOneAndUpdate(
             { roomId: this.roomId },
             { 
                 $pull: { 
                     members: { 
-                        $or: [
-                            { username: username },
-                            { socketId: socketId }
-                        ]
+                        socketId: socketId
                     } 
                 } 
             }
@@ -141,9 +138,7 @@ RoomSchema.methods.addMember = async function(username, socketId) {
     } catch (error) {
         console.error('Error adding member:', error);
         // Fallback to manual update
-        this.members = this.members.filter(member => 
-            member.username !== username && member.socketId !== socketId
-        );
+        this.members = this.members.filter(member => member.socketId !== socketId);
         this.members.push({
             username,
             socketId,

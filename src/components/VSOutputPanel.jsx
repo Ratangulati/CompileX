@@ -31,7 +31,7 @@ const VSOutputPanel = ({ outputDetails }) => {
                         </button>
                     </div>
                     <div className="space-y-2 text-sm">
-                        <div className="text-gray-700 dark:text-gray-300">&gt; Running code...</div>
+                        {/* <div className="text-gray-700 dark:text-gray-300">&gt; Running code...</div> */}
                         {output && (
                             <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                                 {output}
