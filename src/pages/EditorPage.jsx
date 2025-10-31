@@ -387,9 +387,16 @@ const javascriptDefault = getDefaultCode('javascript');
 
                 // Handle real-time code changes from other users
                 socketRef.current.on('code-change', ({ code, fileId }) => {
-                    if (fileId && files[activeFile] && files[activeFile].id === fileId) {
-                        setCode(code);
-                        codeRef.current = code;
+                    if (!fileId) return;
+                    // Update content in all state stores by file ID, but avoid forcing editor via setCode
+                    setFiles(prev => prev.map(f => f.id === fileId ? { ...f, content: code } : f));
+                    setExplorerFiles(prev => prev.map(f => f.id === fileId ? { ...f, content: code } : f));
+                    setFolders(prev => prev.map(folder => ({
+                        ...folder,
+                        files: folder.files.map(f => f.id === fileId ? { ...f, content: code } : f)
+                    })));
+                    if (files[activeFile]?.id === fileId) {
+                        codeRef.current = code; // keep buffer in sync without triggering editor setValue via props
                     }
                 });
 

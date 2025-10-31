@@ -21,6 +21,7 @@ const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, l
     const [fileName, setFileName] = useState('main.js');
     const [isEditingFileName, setIsEditingFileName] = useState(false);
     const editorRef = useRef(null);
+    const prevActiveFileIdRef = useRef(null);
     const { isDark } = useTheme();
 
     // Function to get CodeMirror mode based on language
@@ -89,24 +90,22 @@ const Editor = ({socketRef, roomId, onCodeChange, initialCode, onSelectChange, l
         init();
     }, []);
 
-    // Effect to update editor content when initialCode changes
+    // Effect to update editor content only when active file changes
     useEffect(() => {
-        if (editorRef.current && initialCode !== undefined) {
-            const currentValue = editorRef.current.getValue();
-            if (currentValue !== initialCode) {
-                // Only update if the change is significant (not just cursor movement)
-                const cursor = editorRef.current.getCursor();
-                
-                // Use setValue with cursor preservation
-                editorRef.current.setValue(initialCode);
-                
-                // Restore cursor position if it's still valid
-                if (cursor.line < editorRef.current.lineCount()) {
-                    editorRef.current.setCursor(cursor);
-                }
+        if (!editorRef.current) return;
+        const activeChanged = prevActiveFileIdRef.current !== activeFileId;
+        if (!activeChanged) return;
+        prevActiveFileIdRef.current = activeFileId;
+        // Apply file switch content
+        const currentValue = editorRef.current.getValue();
+        if (initialCode !== undefined && currentValue !== initialCode) {
+            const cursor = editorRef.current.getCursor();
+            editorRef.current.setValue(initialCode);
+            if (cursor.line < editorRef.current.lineCount()) {
+                editorRef.current.setCursor(cursor);
             }
         }
-    }, [initialCode]);
+    }, [initialCode, activeFileId]);
 
     // Effect to change language mode when language changes
     useEffect(() => {
