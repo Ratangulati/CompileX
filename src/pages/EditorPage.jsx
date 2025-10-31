@@ -174,170 +174,235 @@ const javascriptDefault = getDefaultCode('javascript');
           try {
             socketRef.current = await initSocket();
       
-            socketRef.current.on('connection_error', (err) => handleErrors(err));
-            socketRef.current.on('connect_failed', (err) => handleErrors(err));
-      
+            // Define error handler first
             const handleErrors = (e) => {
               console.log('socket error', e);
               toast.error('Socket connection failed, try again later.');
               reactNavigator('/');
             };
 
-            
-      
-            socketRef.current.on('join', ({ clients, username, socketId }) => {
-              const newClients = clients.map((client) => ({
-                username: client.username,
-                socketId: client.socketId,
-              }));
-      
-              const updatedClients = Array.from(
-                new Set(newClients.map(JSON.stringify))
-              ).map(JSON.parse);
-      
-              setClients(updatedClients);
-      
-              if (!updatedClients.some((client) => client.socketId === socketId)) {
-                if (username !== location.state?.username) {
-                  toast.success(`${username} joined the room`);
-                  console.log(`${username} joined`);
-                }
-              }
-      
-              socketRef.current.emit('sync-code', { code: codeRef.current, socketId });
-            });
+            // Set up error handlers
+            socketRef.current.on('connection_error', (err) => handleErrors(err));
+            socketRef.current.on('connect_failed', (err) => handleErrors(err));
 
-            socketRef.current.on('user-disconnected', ({ clients, username }) => {
-              setClients(clients);
-              if (username !== location.state?.username) {
-                toast.success(`${username} left the room`);
-                console.log(`${username} left`);
-              }
-            });
+            // Wait for socket to connect before setting up event handlers
+            const setupSocketHandlers = () => {
+                if (!socketRef.current || !socketRef.current.connected) {
+                    console.log('Socket not connected yet, waiting...');
+                    return false;
+                }
+
+                console.log('Socket connected, setting up handlers');
       
-            socketRef.current.on('join-error', (error) => {
-                console.error('Join error:', error);
-                toast.error(error);
-                reactNavigator('/');
-            });
+                socketRef.current.on('join', ({ clients, username, socketId }) => {
+                  const newClients = clients.map((client) => ({
+                    username: client.username,
+                    socketId: client.socketId,
+                  }));
+      
+                  const updatedClients = Array.from(
+                    new Set(newClients.map(JSON.stringify))
+                  ).map(JSON.parse);
+      
+                  setClients(updatedClients);
+      
+                  if (!updatedClients.some((client) => client.socketId === socketId)) {
+                    if (username !== location.state?.username) {
+                      toast.success(`${username} joined the room`);
+                      console.log(`${username} joined`);
+                    }
+                  }
+      
+                  // Only sync code if socket is connected
+                  if (socketRef.current && socketRef.current.connected) {
+                    socketRef.current.emit('sync-code', { code: codeRef.current, socketId });
+                  }
+                });
 
-            // Handle room state from database
-            socketRef.current.on('room-state', ({ files: dbFiles, folders: dbFolders, explorerFiles: dbExplorerFiles, expandedFolders: dbExpandedFolders, activeFile: dbActiveFile, currentLanguage: dbCurrentLanguage, currentCode: dbCurrentCode }) => {
-                console.log('Received room state from database:', { dbFiles, dbFolders, dbExplorerFiles, dbExpandedFolders, dbActiveFile, dbCurrentLanguage, dbCurrentCode });
-                
-                // Clear localStorage for this room to ensure room isolation
-                localStorage.removeItem('files');
-                localStorage.removeItem('explorerFiles');
-                localStorage.removeItem('folders');
-                localStorage.removeItem('expandedFolders');
-                
-                // Load room state from database instead of localStorage
-                if (dbFiles && dbFiles.length > 0) {
-                    setFiles(dbFiles);
-                    setActiveFile(dbActiveFile || 0);
-                    setCode(dbCurrentCode || '');
-                    setLanguage(dbCurrentLanguage || languageOptions[0]);
-                    setCompileLanguage(dbCurrentLanguage || languageOptions[0]);
-                    codeRef.current = dbCurrentCode || '';
-                } else {
-                    // If no files in database, start with empty state
-                    setFiles([]);
-                    setActiveFile(0);
-                    setCode('');
-                    setLanguage(languageOptions[0]);
-                    setCompileLanguage(languageOptions[0]);
-                    codeRef.current = '';
-                }
-                
-                if (dbFolders && dbFolders.length > 0) {
-                    setFolders(dbFolders);
-                } else {
-                    setFolders([]);
-                }
-                
-                if (dbExplorerFiles && dbExplorerFiles.length > 0) {
-                    setExplorerFiles(dbExplorerFiles);
-                } else {
-                    setExplorerFiles([]);
-                }
-                
-                if (dbExpandedFolders && dbExpandedFolders.length > 0) {
-                    setExpandedFolders(dbExpandedFolders);
-                } else {
-                    setExpandedFolders([]);
-                }
-            });
+                socketRef.current.on('user-disconnected', ({ clients, username }) => {
+                  setClients(clients);
+                  if (username !== location.state?.username) {
+                    toast.success(`${username} left the room`);
+                    console.log(`${username} left`);
+                  }
+                });
+      
+                socketRef.current.on('join-error', (error) => {
+                    console.error('Join error:', error);
+                    toast.error(error);
+                    reactNavigator('/');
+                });
 
-            // Handle room state updates from other users
-            socketRef.current.on('room-state-update', ({ files: updatedFiles, folders: updatedFolders, explorerFiles: updatedExplorerFiles, expandedFolders: updatedExpandedFolders, activeFile: updatedActiveFile }) => {
-                console.log('Received room state update:', { updatedFiles, updatedFolders, updatedExplorerFiles, updatedExpandedFolders, updatedActiveFile });
-                
-                if (updatedFiles) setFiles(updatedFiles);
-                if (updatedFolders) setFolders(updatedFolders);
-                if (updatedExplorerFiles) setExplorerFiles(updatedExplorerFiles);
-                if (updatedExpandedFolders) setExpandedFolders(updatedExpandedFolders);
-                if (updatedActiveFile !== undefined) setActiveFile(updatedActiveFile);
-            });
-
-            if (!hasJoinedRoom) {
-              setHasJoinedRoom(true);
-              socketRef.current.emit('join', { roomId, username: location.state?.username });
-            } else {
-              console.log('User already  joined the room');
-            }
-
-            socketRef.current.on('language:change', ({ language, fileId }) => {
-                // Only update language if it's for the currently active file
-                if (files[activeFile] && files[activeFile].id === fileId) {
-                setLanguage(language);
-                setCompileLanguage(language);
+                // Handle room state from database
+                socketRef.current.on('room-state', ({ files: dbFiles, folders: dbFolders, explorerFiles: dbExplorerFiles, expandedFolders: dbExpandedFolders, activeFile: dbActiveFile, currentLanguage: dbCurrentLanguage, currentCode: dbCurrentCode }) => {
+                    console.log('Received room state from database:', { dbFiles, dbFolders, dbExplorerFiles, dbExpandedFolders, dbActiveFile, dbCurrentLanguage, dbCurrentCode });
                     
-                    // Only update the active file's language, don't change its content
-                    if (!files[activeFile].isWelcome) {
-                        const updatedFiles = [...files];
-                        updatedFiles[activeFile] = {
-                            ...updatedFiles[activeFile],
-                            language: language
-                        };
+                    // Clear localStorage for this room to ensure room isolation
+                    localStorage.removeItem('files');
+                    localStorage.removeItem('explorerFiles');
+                    localStorage.removeItem('folders');
+                    localStorage.removeItem('expandedFolders');
+                    
+                    // Load room state from database instead of localStorage
+                    if (dbFiles && Array.isArray(dbFiles) && dbFiles.length > 0) {
+                        // Set files first
+                        setFiles(dbFiles);
+                        
+                        // Determine the active file index
+                        const activeIndex = dbActiveFile !== undefined && dbActiveFile !== null ? dbActiveFile : 0;
+                        setActiveFile(activeIndex);
+                        
+                        // Get the active file's content from the files array, not from currentCode
+                        const activeFileObj = dbFiles[activeIndex];
+                        const fileContent = activeFileObj && activeFileObj.content !== undefined ? activeFileObj.content : (dbCurrentCode || '');
+                        
+                        // Set code from the active file's content
+                        setCode(fileContent);
+                        codeRef.current = fileContent;
+                        
+                        // Set language from active file or fallback to currentLanguage or default
+                        const fileLanguage = activeFileObj && activeFileObj.language ? activeFileObj.language : (dbCurrentLanguage || languageOptions[0]);
+                        setLanguage(fileLanguage);
+                        setCompileLanguage(fileLanguage);
+                    } else {
+                        // If no files in database, start with empty state
+                        setFiles([]);
+                        setActiveFile(0);
+                        setCode('');
+                        setLanguage(languageOptions[0]);
+                        setCompileLanguage(languageOptions[0]);
+                        codeRef.current = '';
+                    }
+                    
+                    // Load folders
+                    if (dbFolders && Array.isArray(dbFolders) && dbFolders.length > 0) {
+                        setFolders(dbFolders);
+                    } else {
+                        setFolders([]);
+                    }
+                    
+                    // Load explorer files
+                    if (dbExplorerFiles && Array.isArray(dbExplorerFiles) && dbExplorerFiles.length > 0) {
+                        setExplorerFiles(dbExplorerFiles);
+                    } else {
+                        setExplorerFiles([]);
+                    }
+                    
+                    // Load expanded folders
+                    if (dbExpandedFolders && Array.isArray(dbExpandedFolders) && dbExpandedFolders.length > 0) {
+                        setExpandedFolders(dbExpandedFolders);
+                    } else {
+                        setExpandedFolders([]);
+                    }
+                });
+
+                // Handle room state updates from other users
+                socketRef.current.on('room-state-update', ({ files: updatedFiles, folders: updatedFolders, explorerFiles: updatedExplorerFiles, expandedFolders: updatedExpandedFolders, activeFile: updatedActiveFile }) => {
+                    console.log('Received room state update:', { updatedFiles, updatedFolders, updatedExplorerFiles, updatedExpandedFolders, updatedActiveFile });
+                    
+                    if (updatedFiles && Array.isArray(updatedFiles)) {
                         setFiles(updatedFiles);
                         
-                        // Also update in explorer files
-                        setExplorerFiles(prevExplorerFiles => 
-                            prevExplorerFiles.map(file => 
-                                file.id === files[activeFile].id 
-                                    ? { ...file, language: language }
-                                    : file
-                            )
-                        );
+                        // Update code editor if files were updated
+                        // Use updatedActiveFile if provided, otherwise keep current active file
+                        setActiveFile(prevActiveFile => {
+                            const targetIndex = updatedActiveFile !== undefined ? updatedActiveFile : prevActiveFile;
+                            if (updatedFiles[targetIndex]) {
+                                const activeFileContent = updatedFiles[targetIndex].content || '';
+                                setCode(activeFileContent);
+                                codeRef.current = activeFileContent;
+                            }
+                            return updatedActiveFile !== undefined ? updatedActiveFile : prevActiveFile;
+                        });
+                    }
+                    
+                    if (updatedFolders && Array.isArray(updatedFolders)) {
+                        setFolders(updatedFolders);
+                    }
+                    
+                    if (updatedExplorerFiles && Array.isArray(updatedExplorerFiles)) {
+                        setExplorerFiles(updatedExplorerFiles);
+                    }
+                    
+                    if (updatedExpandedFolders && Array.isArray(updatedExpandedFolders)) {
+                        setExpandedFolders(updatedExpandedFolders);
+                    }
+                });
+
+                // Set up language change handler
+                socketRef.current.on('language:change', ({ language, fileId }) => {
+                    // Only update language if it's for the currently active file
+                    if (files[activeFile] && files[activeFile].id === fileId) {
+                        setLanguage(language);
+                        setCompileLanguage(language);
                         
-                        // Update folder files if the file is in a folder
-                        setFolders(prevFolders => 
-                            prevFolders.map(folder => ({
-                                ...folder,
-                                files: folder.files.map(file => 
+                        // Only update the active file's language, don't change its content
+                        if (!files[activeFile].isWelcome) {
+                            const updatedFiles = [...files];
+                            updatedFiles[activeFile] = {
+                                ...updatedFiles[activeFile],
+                                language: language
+                            };
+                            setFiles(updatedFiles);
+                            
+                            // Also update in explorer files
+                            setExplorerFiles(prevExplorerFiles => 
+                                prevExplorerFiles.map(file => 
                                     file.id === files[activeFile].id 
                                         ? { ...file, language: language }
                                         : file
                                 )
-                            }))
-                        );
+                            );
+                            
+                            // Update folder files if the file is in a folder
+                            setFolders(prevFolders => 
+                                prevFolders.map(folder => ({
+                                    ...folder,
+                                    files: folder.files.map(file => 
+                                        file.id === files[activeFile].id 
+                                            ? { ...file, language: language }
+                                            : file
+                                    )
+                                }))
+                            );
+                        }
                     }
-                }
-                
-                // toast.success(`Language changed to ${language.label}`);
-            });
+                });
 
-            socketRef.current.on('output-details', ({ outputDetails }) => {
-                setOutputDetails(outputDetails);
-            });
+                // Set up output details handler
+                socketRef.current.on('output-details', ({ outputDetails }) => {
+                    setOutputDetails(outputDetails);
+                });
 
-            // Handle real-time code changes from other users
-            socketRef.current.on('code-change', ({ code, fileId }) => {
-                if (fileId && files[activeFile] && files[activeFile].id === fileId) {
-                    setCode(code);
-                    codeRef.current = code;
+                // Handle real-time code changes from other users
+                socketRef.current.on('code-change', ({ code, fileId }) => {
+                    if (fileId && files[activeFile] && files[activeFile].id === fileId) {
+                        setCode(code);
+                        codeRef.current = code;
+                    }
+                });
+
+                // Join room after socket is connected and handlers are set up
+                if (!hasJoinedRoom && socketRef.current && socketRef.current.connected) {
+                  setHasJoinedRoom(true);
+                  socketRef.current.emit('join', { roomId, username: location.state?.username });
+                } else {
+                  console.log('User already joined the room');
                 }
-            });
+
+                return true;
+            };
+
+            // If socket is already connected, set up handlers immediately
+            if (socketRef.current.connected) {
+                setupSocketHandlers();
+            } else {
+                // Wait for connection
+                socketRef.current.on('connect', () => {
+                    console.log('Socket connected');
+                    setupSocketHandlers();
+                });
+            }
       
         } catch (error) {
             console.error('Failed to initialize socket:', error);
@@ -350,11 +415,19 @@ const javascriptDefault = getDefaultCode('javascript');
       
         const cleanup = () => {
           if (socketRef.current) {
-            socketRef.current.disconnect();
-            socketRef.current.off('joined');
-            socketRef.current.off('disconnected');
-            socketRef.current.off('output-details');
+            // Remove all event listeners to prevent duplicates
+            socketRef.current.off('connect');
+            socketRef.current.off('connection_error');
+            socketRef.current.off('connect_failed');
+            socketRef.current.off('join');
             socketRef.current.off('user-disconnected');
+            socketRef.current.off('join-error');
+            socketRef.current.off('room-state');
+            socketRef.current.off('room-state-update');
+            socketRef.current.off('language:change');
+            socketRef.current.off('output-details');
+            socketRef.current.off('code-change');
+            socketRef.current.disconnect();
           }
         };
       
