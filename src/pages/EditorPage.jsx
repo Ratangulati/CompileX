@@ -1459,7 +1459,7 @@ const javascriptDefault = getDefaultCode('javascript');
                     {/* Logo */}
                     <div className="flex items-center gap-2">
                         <LuFileText className="w-5 h-5 text-blue-600" />
-                        <span className="text-lg font-semibold text-gray-800 dark:text-white">CodeEditor Pro</span>
+                        <span className="text-lg font-semibold text-gray-800 dark:text-white">CompileX</span>
                     </div>
 
                     {/* Language Dropdown */}

@@ -14,7 +14,7 @@ class InMemoryStorage {
                 files: [{
                     id: Date.now(),
                     name: 'Welcome',
-                    content: 'Welcome to CodeEditor Pro!\n\nTo get started:\n1. Create a new file using the + button in the explorer\n2. Select your programming language\n3. Start coding!\n\nThis welcome page will be automatically removed when you create your first file.',
+                    content: 'Welcome to CompileX!\n\nTo get started:\n1. Create a new file using the + button in the explorer\n2. Select your programming language\n3. Start coding!\n\nThis welcome page will be automatically removed when you create your first file.',
                     language: { value: 'javascript', label: 'JavaScript', name: 'JavaScript' },
                     isWelcome: true
                 }],

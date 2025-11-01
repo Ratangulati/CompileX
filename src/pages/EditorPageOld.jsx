@@ -108,11 +108,11 @@ const javascriptDefault = getDefaultCode('javascript');
             const parsedFiles = JSON.parse(saved);
             // If no files exist, show welcome page
             if (parsedFiles.length === 0) {
-                return [{ name: 'Welcome', content: 'Welcome to CodeEditor Pro!\n\nTo get started:\n1. Create a new file using the + button in the explorer\n2. Select your programming language\n3. Start coding!\n\nThis welcome page will be automatically removed when you create your first file.', language: 'javascript', isWelcome: true }];
+                return [{ name: 'Welcome', content: 'Welcome to CompileX!\n\nTo get started:\n1. Create a new file using the + button in the explorer\n2. Select your programming language\n3. Start coding!\n\nThis welcome page will be automatically removed when you create your first file.', language: 'javascript', isWelcome: true }];
             }
             return parsedFiles;
         }
-        return [{ name: 'Welcome', content: 'Welcome to CodeEditor Pro!\n\nTo get started:\n1. Create a new file using the + button in the explorer\n2. Select your programming language\n3. Start coding!\n\nThis welcome page will be automatically removed when you create your first file.', language: 'javascript', isWelcome: true }];
+        return [{ name: 'Welcome', content: 'Welcome to CompileX!\n\nTo get started:\n1. Create a new file using the + button in the explorer\n2. Select your programming language\n3. Start coding!\n\nThis welcome page will be automatically removed when you create your first file.', language: 'javascript', isWelcome: true }];
     });
     const [activeFile, setActiveFile] = useState(0);
     const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -669,7 +669,7 @@ const javascriptDefault = getDefaultCode('javascript');
                     {/* Logo */}
                     <div className="flex items-center gap-2">
                         <LuFileText className="w-5 h-5 text-blue-600" />
-                        <span className="text-lg font-semibold text-gray-800 dark:text-white">CodeEditor Pro</span>
+                        <span className="text-lg font-semibold text-gray-800 dark:text-white">CompileX</span>
                     </div>
 
                     {/* Language Dropdown */}
